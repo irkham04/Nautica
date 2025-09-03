@@ -52,9 +52,10 @@ async function getProxyList(proxyBankUrl = PROXY_BANK_URL) {
   /**
    * Format:
    *
-   * <IP>,<Port>,<Country ID>,<ORG>
+   * <IP>:<Port>#<Country ID>
    * Contoh:
-   * 1.1.1.1,443,SG,Cloudflare Inc.
+   * 103.146.119.191:443#NL
+   * 103.146.119.71:443#US
    */
   if (!proxyBankUrl) {
     throw new Error("No Proxy Bank URL Provided!");
@@ -64,18 +65,22 @@ async function getProxyList(proxyBankUrl = PROXY_BANK_URL) {
   if (proxyBank.status == 200) {
     const text = (await proxyBank.text()) || "";
 
-    const proxyString = text.split("\n").filter(Boolean);
+    const proxyString = text.split("\n").filter(Boolean); // Pisah berdasarkan baris dan filter baris kosong
+
     cachedProxyList = proxyString
       .map((entry) => {
-        const [proxyIP, proxyPort, country, org] = entry.split(",");
+        // Misalkan formatnya 'IP:Port#Negara'
+        const [proxy, country] = entry.split('#'); // Pisah berdasarkan '#'
+        const [proxyIP, proxyPort] = proxy.split(':'); // Pisah IP dan Port berdasarkan ':'
+
         return {
           proxyIP: proxyIP || "Unknown",
           proxyPort: proxyPort || "Unknown",
           country: country || "Unknown",
-          org: org || "Unknown Org",
+          org: "Unknown Org" // Karena data 'org' tidak ada dalam format baru
         };
       })
-      .filter(Boolean);
+      .filter(Boolean); // Filter untuk memastikan tidak ada nilai yang kosong
   }
 
   return cachedProxyList;
